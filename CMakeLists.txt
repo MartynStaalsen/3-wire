@@ -3,12 +3,12 @@ project(black_box)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(unit_test_executable unit_test_driver.cpp)
+add_executable(unit_test_executable test/unit_test_driver.cpp)
 
 include(FetchContent)
 
 
-include( helper_header.hpp)
+include(helper_header.hpp)
 
 fetchcontent_declare(
   googletest
@@ -21,6 +21,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 target_link_libraries(unit_test_executable
   GTest::gtest_main
+)
+
+target_include_directories(unit_test_executable
+  PRIVATE ${CMAKE_SOURCE_DIR}
 )
 
 include(GoogleTest)
