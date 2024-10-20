@@ -152,10 +152,31 @@ Chunk decode_chunk(std::string const& chunk_str_og) {
 
 std::string encode_chunk(Chunk const& chunk) {
   std::string chunk_str;
+  if (!chunk.valid)
+  {
+    throw ParsingError("Cannot encode invalid chunk");
+  }
   chunk_str +=chunk_start_sentinel;
   chunk_str += std::to_string(chunk.slave_id);
   chunk_str += chunk_internal_delimiter;
+
+  if (chunk.key.empty())
+  {
+    throw ParsingError("Empty key in chunk");
+  }
+  chunk_str += chunk.key;
+
+  if (chunk.type == ChunkDataType::UNKNOWN)
+  {
+    throw ParsingError("Unknown chunk type");
+  }
+  chunk_str += chunk_internal_delimiter;
   chunk_str += encode_chunk_type(chunk.type);
+
+  if (chunk.data_str.empty())
+  {
+    throw ParsingError("Empty data in chunk");
+  }
   chunk_str += chunk_internal_delimiter;
   chunk_str += chunk.data_str;
   chunk_str += chunk_end_sentinel;
