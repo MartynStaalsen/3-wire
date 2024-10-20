@@ -1,4 +1,5 @@
 #include "helper_unit_tests.hpp"
+#include "sim_test.hpp"
 
 #include "gtest/gtest.h"
 
