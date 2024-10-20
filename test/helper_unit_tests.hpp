@@ -17,7 +17,7 @@ TEST(BBPRotocolTest, ChunkTypeDecode){
 TEST(BBProtocolTest, ChunkEncodeDecode)
 {
   bb_helpers::Chunk decoded_chunk;
-  std::string chunkstr;
+  std::string chunkstr, result_chunkstr;
   std::vector<std::string> bad_chunks = {
     "",
     ":::",
@@ -41,6 +41,8 @@ TEST(BBProtocolTest, ChunkEncodeDecode)
   EXPECT_EQ(decoded_chunk.key, "2");
   EXPECT_EQ(decoded_chunk.type, ChunkDataType::BOOL);
   EXPECT_TRUE(decoded_chunk.valid);
+  result_chunkstr = encode_chunk(decoded_chunk);
+  EXPECT_EQ(chunkstr, result_chunkstr);
 
   chunkstr = "[1:some_key:BOOL:0]";
   decoded_chunk = decode_chunk(chunkstr);
@@ -48,6 +50,8 @@ TEST(BBProtocolTest, ChunkEncodeDecode)
   EXPECT_EQ(decoded_chunk.key, "some_key");
   EXPECT_EQ(decoded_chunk.type, ChunkDataType::BOOL);
   EXPECT_TRUE(decoded_chunk.valid);
+  result_chunkstr = encode_chunk(decoded_chunk);
+  EXPECT_EQ(chunkstr, result_chunkstr);
 
 
   chunkstr = "[2:i_1:" + kInt32Typestr + ":123]";
@@ -56,11 +60,27 @@ TEST(BBProtocolTest, ChunkEncodeDecode)
   EXPECT_EQ(decoded_chunk.key, "i_1");
   EXPECT_EQ(decoded_chunk.type, ChunkDataType::INT_32);
   EXPECT_TRUE(decoded_chunk.valid);
+  result_chunkstr = encode_chunk(decoded_chunk);
+  EXPECT_EQ(chunkstr, result_chunkstr);
 
   for (auto const& bad_chunk : bad_chunks)
   {
     EXPECT_THROW(bb_helpers::decode_chunk(bad_chunk), ParsingError);
   }
+
+  Chunk imcomplete_chunk;
+  EXPECT_THROW(bb_helpers::encode_chunk(imcomplete_chunk), ParsingError);
+  imcomplete_chunk.slave_id = 1;
+  EXPECT_THROW(bb_helpers::encode_chunk(imcomplete_chunk), ParsingError);
+  imcomplete_chunk.key = "some_key";
+  EXPECT_THROW(bb_helpers::encode_chunk(imcomplete_chunk), ParsingError);
+  imcomplete_chunk.type = ChunkDataType::BOOL;
+  EXPECT_THROW(bb_helpers::encode_chunk(imcomplete_chunk), ParsingError);
+  imcomplete_chunk.data_str = "1";
+  EXPECT_THROW(bb_helpers::encode_chunk(imcomplete_chunk), ParsingError);
+  imcomplete_chunk.valid = true;
+  EXPECT_NO_THROW(bb_helpers::encode_chunk(imcomplete_chunk));
+
 }
 
 }   // namespace bb_helpers
