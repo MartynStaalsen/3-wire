@@ -33,6 +33,8 @@ std::string S2s(String s){
 
 uint msg_byte_count = 0;
 
+bool first_frame = false;
+
 void setup() {
   cycle_time_ms = 1000.0 / TARGET_HZ; 
   // initialize both serial ports:
@@ -45,7 +47,7 @@ void setup() {
 void loop() {
   if (Serial.available() && !am_master){
     am_master = true;
-    Serial.println("hi there");
+    Serial.println("hi there");  // DEBUG
  
   }
   // if we read anthing from usb serial, send a query down the chain
@@ -65,7 +67,7 @@ void loop() {
     std::string echo = response + "[" + now_millis_to_str() + "]"; 
     Serial.println(echo.c_str());
   } else {
-    Serial.println("not master");
+    Serial.println("not master");  // DEBUG
     // am not master, my job is just to echo what i hear on ChainSerial
     
     //read any available bytes on input
@@ -83,6 +85,7 @@ void loop() {
         // this should be uniqe per slave.
         ChainSerial.print(msg_byte_count);
         ChainSerial.print(terminator);
+        first_frame = false;
       } else {
         // pass it on blindly
         ChainSerial.write(read_byte);
