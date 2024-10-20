@@ -12,9 +12,21 @@ const char chunk_end_sentinel = ']';
 
 const char chunk_internal_delimiter = ':';
 
-const static inline std::string bool_typestr = "BOOL";
-const static inline std::string int_32_typestr = "I_32";
-const static inline std::string unknown_typestr = "UNKN";
+const std::string kBoolTypestr = "BOOL";
+const std::string kInt32Typestr = "I_32";
+
+class ParsingError : public std::exception {
+public:
+  ParsingError(const std::string& message = "Parsing error occurred")
+    : msg_(message) {}
+
+  virtual const char* what() const noexcept override {
+    return msg_.c_str();
+  }
+
+private:
+  std::string msg_;
+};
 
 /*
   message is a char array something like this:
@@ -28,104 +40,128 @@ const static inline std::string unknown_typestr = "UNKN";
 */
 enum class ChunkDataType
 {
+  UNKNOWN,
   BOOL,
-  INT_32,  // on esp32, int is 32 bits
-  UNKNOWN  // use this type if parsing fails, i guess
+  INT_32  // on esp32, int is 32 bits
 };
 
 struct Chunk
 {
-  uint id;
-  std::string type;
-  std::string data;
+  uint slave_id;
+  std::string key;
+  ChunkDataType type = ChunkDataType::UNKNOWN;
+  std::string data_str;
+  bool valid = false;  // if not all fields are valid, this will be false
 };
 
-// chunk id string can be multple characters. parse it to a uint
-uint decode_chunk_id(std::string const& chunk_id_str)
-{
-  return std::stoul(chunk_id_str);
+Chunk make_chunk(
+  uint slave_id,
+  std::string const& key,
+  bool bool_val
+){
+  Chunk chunk;
+  chunk.slave_id = slave_id;
+  chunk.key = key;
+  chunk.type = ChunkDataType::BOOL;
+  chunk.data_str = static_cast<char>(bool_val);
+  chunk.valid = true;
+  return chunk;
 }
 
-ChunkDataType decode_chunk_type(std::string const& chunk_type_str)
-{
-  if (chunk_type_str == bool_typestr)
+
+Chunk make_chunk(
+  uint slave_id,
+  std::string const& key,
+  int32_t int_val
+){
+  Chunk chunk;
+  chunk.slave_id = slave_id;
+  chunk.key = key;
+  chunk.type = ChunkDataType::BOOL;
+  chunk.data_str = reinterpret_cast<const char*>(&int_val), sizeof(int_val);
+  chunk.valid = true;
+  return chunk;
+}
+
+ChunkDataType decode_chunk_type(std::string const& chunk_type_str) {
+  if (chunk_type_str == kBoolTypestr)
   {
     return ChunkDataType::BOOL;
   }
-  else if (chunk_type_str == int_32_typestr)
+  else if (chunk_type_str == kInt32Typestr)
   {
     return ChunkDataType::INT_32;
   }
   else
   {
-    return ChunkDataType::UNKNOWN;
+    throw ParsingError("Unknown chunk type: " + chunk_type_str);
   }
 }
 
-std::string encode_chunk_type(ChunkDataType chunk_type)
-{
+std::string encode_chunk_type(ChunkDataType chunk_type) {
   switch (chunk_type)
   {
     case ChunkDataType::BOOL:
-      return bool_typestr;
+      return kBoolTypestr;
     case ChunkDataType::INT_32:
-      return int_32_typestr;
-    default:
-      return unknown_typestr;
+      return kInt32Typestr;
   }
+  throw ParsingError();
 }
 
-// helper to turn a message into a vector of chunks
-std::vector<std::string> make_chunks(std::string const& message)
-{
-  std::vector<std::string> chunks;
-  std::string chunk;
-  bool in_chunk = false;
-  for (auto const& c : message)
-  {
-    if (c == chunk_start_sentinel)
+Chunk decode_chunk(std::string const& chunk_str_og) {
+  std::string chunk_str = chunk_str_og;
+  Chunk chunk;
+  try {
+    if (chunk_str[0] != chunk_start_sentinel || chunk_str[chunk_str.size() - 1] != chunk_end_sentinel)
     {
-      in_chunk = true;
-      chunk.clear();
+      throw ParsingError("Chunk does not start or end with correct sentinel");
     }
-    else if (c == chunk_end_sentinel)
+    if (chunk_str.size() < 5)
     {
-      in_chunk = false;
-      chunks.push_back(chunk);
+      throw ParsingError("Chunk is too short");
     }
-    else if (in_chunk)
-    {
-      chunk.push_back(c);
+    chunk_str = chunk_str.substr(1, chunk_str.size() - 2);  // strip []'s
+    for (std::string t : std::vector<std::string>({"slave_id", "key", "type"})){
+      auto next_delip_pos = chunk_str.find(chunk_internal_delimiter);
+      if (next_delip_pos == std::string::npos) {
+        throw ParsingError("While parsing " + t + " could not find delimiters in chunk data");
+      } else if (next_delip_pos == 0) {
+        throw ParsingError("Empty field in chunk data");
+      }
+      std::string token = chunk_str.substr(0, next_delip_pos);
+      if (t == "slave_id"){
+        chunk.slave_id = std::stoi(token);
+      }
+      else if (t == "key"){
+        chunk.key = token;
+      }
+      else if (t == "type"){
+        chunk.type = decode_chunk_type(token);
+      }
+      chunk_str = chunk_str.substr(next_delip_pos + 1);
     }
+    chunk.data_str = chunk_str;
+  } catch (std::exception const& e) {
+    chunk.valid = false;
+    throw ParsingError(e.what());  // TODO: are we throwing or returning invalid?
   }
-  return chunks;
+  chunk.valid = true;
+  return chunk;
 }
 
-// helper to turn a chunk into a vector of data
-std::vector<std::string> make_data(std::string const& chunk)
-{
-  std::vector<std::string> data;
-  std::string datum;
-  bool in_datum = false;
-  for (auto const& c : chunk)
-  {
-    if (c == chunk_internal_delimiter)
-    {
-      in_datum = true;
-    }
-    else if (c == chunk_end_sentinel)
-    {
-      in_datum = false;
-      data.push_back(datum);
-    }
-    else if (in_datum)
-    {
-      datum.push_back(c);
-    }
-  }
-  return data;
-}
+std::string encode_chunk(Chunk const& chunk) {
+  std::string chunk_str;
+  chunk_str +=chunk_start_sentinel;
+  chunk_str += std::to_string(chunk.slave_id);
+  chunk_str += chunk_internal_delimiter;
+  chunk_str += encode_chunk_type(chunk.type);
+  chunk_str += chunk_internal_delimiter;
+  chunk_str += chunk.data_str;
+  chunk_str += chunk_end_sentinel;
 
+  return chunk_str;
+}
 
 }   // namespace bb_helpers
 

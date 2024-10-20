@@ -7,8 +7,7 @@ add_executable(unit_test_executable test/unit_test_driver.cpp)
 
 include(FetchContent)
 
-
-include(helper_header.hpp)
+#include(helper_header.hpp)
 
 fetchcontent_declare(
   googletest
