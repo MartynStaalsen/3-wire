@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include "sericat.hpp"
+#include "sericat_sdo.hpp"
 
 namespace sericat
 {
@@ -21,11 +21,6 @@ TEST(SdoTest, SdoBase)
   sdo_vector.push_back(Irma);
   sdo_vector.push_back(Frank);
   sdo_vector.push_back(Sue);
-
-  // sdo_vector.push_back(std::make_shared<Sdo<bool>>("Bob"));
-  // sdo_vector.push_back(std::make_shared<Sdo<std::int32_t>>("Irma"));
-  // sdo_vector.push_back(std::make_shared<Sdo<float>>("Frank"));
-  // sdo_vector.push_back(std::make_shared<Sdo<std::string>>("Sue"));
 
   // try reading/writing
   const bool bool_val = true;

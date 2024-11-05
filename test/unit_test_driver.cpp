@@ -1,4 +1,4 @@
-#include "helper_unit_tests.hpp"
+// #include "helper_unit_tests.hpp"
 #include "sim_test.hpp"
 #include "sericat_sdo_tests.hpp"
 

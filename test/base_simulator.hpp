@@ -1,3 +1,6 @@
+#ifndef BASE_SIMULATOR_HPP
+#define BASE_SIMULATOR_HPP
+
 #include <atomic>
 #include <deque>
 #include <future>
@@ -117,3 +120,5 @@ public:
 };
 
 }  // namespace bb_simulator
+
+#endif  // BASE_SIMULATOR_HPP

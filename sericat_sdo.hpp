@@ -1,6 +1,6 @@
 
-#ifndef SERICCAT_HPP_
-#define SERICCAT_HPP_
+#ifndef SERICCAT_SDO_HPP_
+#define SERICCAT_SDO_HPP_
 
 #include <cstdint>
 #include <stdexcept>
@@ -168,4 +168,4 @@ public:
 };
 }  // namespace sericat
 
-#endif  // SERICCAT_HPP_
+#endif  // SERICCAT_SDO_HPP_
