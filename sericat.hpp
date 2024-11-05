@@ -16,6 +16,29 @@
 
 namespace sericat {
 
+template <typename T>
+std::string to_byte_string(T const& value){
+  return std::string(reinterpret_cast<const char*>(&value), sizeof(T));
+}
+
+template <typename T>
+T from_byte_string(std::string const& s){
+  T value;
+  std::memcpy(&value, s.data(), sizeof(T));
+  return value;
+}
+
+// Specialization for std::string
+template <>
+std::string to_byte_string<std::string>(std::string const& value){
+  return value;
+}
+
+template <>
+std::string from_byte_string<std::string>(std::string const& s){
+  return s;
+}
+
 enum class SdoDataType {
   BOOL,
   INT_32,
@@ -46,17 +69,17 @@ public:
   }
 
   // get data as a string
-  std::string read(){
+  std::string get_data_string(){
     return data_;
   }
 
-  // turn a string into my data_
-  // throws if string cannot be decoded
-  void write(std::string const sdo_str){
+  // turn put raw string into data_. make sure it's valid for type_ first tho
+  // throws invalid_argument if the string is not the right size for the type 
+  void set_data_string(std::string const sdo_str){
     switch (type_)
     {
       case SdoDataType::BOOL:
-        // for bool, expect single char
+        // for bool, expect single char: ("0", or "1")
         if (sdo_str.size() != 1)
         {
           throw std::invalid_argument("Cannot decode bool from string of size " + std::to_string(sdo_str.size()));
@@ -68,7 +91,6 @@ public:
         {
           throw std::invalid_argument("Cannot decode int_32 from string of size " + std::to_string(sdo_str.size()));
         }
-        data_ = sdo_str;
         break;
       case SdoDataType::FLOAT:
         // for float, expect 4 chars
@@ -78,9 +100,10 @@ public:
         }
         break;
       case SdoDataType::STRING:
-        data_ = sdo_str;
+        // don't care about size
         break;
     }
+    data_ = sdo_str;
   }
 };
 
@@ -94,11 +117,11 @@ public:
   Sdo(std::string const& name) : SdoBase(name, SdoDataType::BOOL) {}
 
   bool read() const {
-    return data_[0] != 0;
+    return from_byte_string<bool>(data_);
   }
 
   void write(bool const& value) {
-    data_ = std::string(1, value ? 1 : 0);
+    data_ = to_byte_string<bool>(value);
   }
 };
 
@@ -108,14 +131,11 @@ public:
   Sdo(std::string const& name) : SdoBase(name, SdoDataType::INT_32) {}
 
   std::int32_t read() const {
-    std::int32_t value;
-    std::memcpy(&value, data_.data(), sizeof(std::int32_t));
-    return value;
+    return from_byte_string<std::int32_t>(data_);
   }
 
   void write(std::int32_t const& value) {
-    data_.resize(sizeof(std::int32_t));
-    std::memcpy(&data_[0], &value, sizeof(std::int32_t));
+    data_ = to_byte_string<std::int32_t>(value);
   }
 };
 
@@ -125,14 +145,11 @@ public:
   Sdo(std::string const& name) : SdoBase(name, SdoDataType::FLOAT) {}
 
   float read() const {
-    float value;
-    std::memcpy(&value, data_.data(), sizeof(float));
-    return value;
+    return from_byte_string<float>(data_);
   }
 
   void write(float const& value) {
-    data_.resize(sizeof(float));
-    std::memcpy(&data_[0], &value, sizeof(float));
+    data_ = to_byte_string<float>(value);
   }
 };
 
