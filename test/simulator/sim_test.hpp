@@ -3,7 +3,6 @@
 
 #include "gtest/gtest.h"
 
-#include "helper_header.hpp"
 #include <chrono>
 #include <thread>
 
