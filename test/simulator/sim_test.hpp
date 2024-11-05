@@ -1,5 +1,5 @@
-#ifndef SIM_TEST_HPP
-#define SIM_TEST_HPP
+#ifndef SIMULATOR__SIM_TEST_HPP
+#define SIMULATOR__SIM_TEST_HPP
 
 #include "gtest/gtest.h"
 
@@ -49,4 +49,4 @@ TEST(SimTest, HelloSimulator){
 
 }  // namespace sim_test
 
-#endif  // SIM_TEST_HPP
+#endif  // SIMULATOR__SIM_TEST_HPP

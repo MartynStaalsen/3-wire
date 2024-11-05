@@ -1,6 +1,6 @@
 
-#ifndef MASTER_SIMULATOR_HPP
-#define MASTER_SIMULATOR_HPP
+#ifndef SIMULATOR__MASTER_SIMULATOR_HPP
+#define SIMULATOR__MASTER_SIMULATOR_HPP
 
 #include "base_simulator.hpp"
 
@@ -27,4 +27,4 @@ class MasterSimulator : BaseSimulator{
 
 }  // namespace bb_simulator
 
-#endif  // MASTER_SIMULATOR_HPP
+#endif  // SIMULATOR__MASTER_SIMULATOR_HPP
