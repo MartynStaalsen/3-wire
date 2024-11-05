@@ -1,4 +1,3 @@
-
 #ifndef SERICCAT_SDO_HPP_
 #define SERICCAT_SDO_HPP_
 
@@ -52,30 +51,22 @@ protected:
   std::string data_;
   
 public:
-  const std::string name_;
+  const std::string description_;
   const SdoDataType type_;
 
   virtual ~SdoBase() = default;
 
-  SdoBase(std::string const& name, SdoDataType type)
-    : name_(name), type_(type) {}
-
-  std::string get_name() const {
-    return name_;
-  }
-
-  SdoDataType get_type() const {
-    return type_;
-  }
+  SdoBase(std::string const& description, SdoDataType type)
+    : description_(description), type_(type) {}
 
   // get data as a string
-  std::string get_data_string(){
+  std::string serialize(){
     return data_;
   }
 
   // turn put raw string into data_. make sure it's valid for type_ first tho
   // throws invalid_argument if the string is not the right size for the type 
-  void set_data_string(std::string const sdo_str){
+  void deserialize(std::string const sdo_str){
     switch (type_)
     {
       case SdoDataType::BOOL:
@@ -114,13 +105,16 @@ class Sdo;
 template <>
 class Sdo<bool> : public SdoBase {
 public:
-  Sdo(std::string const& name) : SdoBase(name, SdoDataType::BOOL) {}
+  Sdo(std::string const& description) : SdoBase(description, SdoDataType::BOOL) {}
+  Sdo(std::string const& description, bool const& initial_value) : SdoBase(description, SdoDataType::BOOL) {
+    set(initial_value);
+  }
 
-  bool read() const {
+  bool get() const {
     return from_byte_string<bool>(data_);
   }
 
-  void write(bool const& value) {
+  void set(bool const& value) {
     data_ = to_byte_string<bool>(value);
   }
 };
@@ -128,13 +122,16 @@ public:
 template <>
 class Sdo<std::int32_t> : public SdoBase {
 public:
-  Sdo(std::string const& name) : SdoBase(name, SdoDataType::INT_32) {}
+  Sdo(std::string const& description) : SdoBase(description, SdoDataType::INT_32) {}
+  Sdo(std::string const& description, std::int32_t const& initial_value) : SdoBase(description, SdoDataType::INT_32) {
+    set(initial_value);
+  }
 
-  std::int32_t read() const {
+  std::int32_t get() const {
     return from_byte_string<std::int32_t>(data_);
   }
 
-  void write(std::int32_t const& value) {
+  void set(std::int32_t const& value) {
     data_ = to_byte_string<std::int32_t>(value);
   }
 };
@@ -142,13 +139,16 @@ public:
 template <>
 class Sdo<float> : public SdoBase {
 public:
-  Sdo(std::string const& name) : SdoBase(name, SdoDataType::FLOAT) {}
+  Sdo(std::string const& description) : SdoBase(description, SdoDataType::FLOAT) {}
+  Sdo(std::string const& description, float const& initial_value) : SdoBase(description, SdoDataType::FLOAT) {
+    set(initial_value);
+  }
 
-  float read() const {
+  float get() const {
     return from_byte_string<float>(data_);
   }
 
-  void write(float const& value) {
+  void set(float const& value) {
     data_ = to_byte_string<float>(value);
   }
 };
@@ -156,13 +156,16 @@ public:
 template <>
 class Sdo<std::string> : public SdoBase {
 public:
-  Sdo(std::string const& name) : SdoBase(name, SdoDataType::STRING) {}
+  Sdo(std::string const& description) : SdoBase(description, SdoDataType::STRING) {}
+  Sdo(std::string const& description, std::string const& initial_value) : SdoBase(description, SdoDataType::STRING) {
+    set(initial_value);
+  }
 
-  std::string read() const {
+  std::string get() const {
     return data_;
   }
 
-  void write(std::string const& value) {
+  void set(std::string const& value) {
     data_ = value;
   }
 };

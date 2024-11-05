@@ -9,11 +9,9 @@ namespace bb_simulator
 
 class SlaveSimulator : BaseSimulator{
   SlaveSimulator(
-    std::shared_ptr<bb_simulator::SerialLine> usb_serial_line_in,
-    std::shared_ptr<bb_simulator::SerialLine> usb_serial_line_out,
     std::shared_ptr<bb_simulator::SerialLine> dc_serial_line_in,
     std::shared_ptr<bb_simulator::SerialLine> dc_serial_line_out
-  ) : SlaveSimulator(usb_serial_line_in, usb_serial_line_out, dc_serial_line_in, dc_serial_line_out) {}
+  ) : SlaveSimulator(nullptr, nullptr, dc_serial_line_in, dc_serial_line_out) {}
 
   void setup() override {
 

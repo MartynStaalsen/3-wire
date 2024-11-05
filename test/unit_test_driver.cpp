@@ -1,4 +1,3 @@
-// #include "helper_unit_tests.hpp"
 #include "simulator/sim_test.hpp"
 #include "sericat_sdo_tests.hpp"
 

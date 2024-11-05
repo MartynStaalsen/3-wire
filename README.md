@@ -20,7 +20,7 @@ This protocol will provide cyclic access to a "frame" of data. This frame will b
 
 
 ### SDOs
-Each slave device will have a data map of "SDO" (software data object) entries. Each SDO has data in it, with datatype being one of the following currently supported:
+Each slave device will have a data map of `SDO` (serializable data object) entries. Each SDO has data in it, with datatype being one of the following currently supported:
 
 - BOOL
 - INT_32
