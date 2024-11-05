@@ -1,6 +1,6 @@
 #include "helper_unit_tests.hpp"
 #include "sim_test.hpp"
-#include "sillycat_sdo_tests.hpp"
+#include "sericat_sdo_tests.hpp"
 
 #include "gtest/gtest.h"
 

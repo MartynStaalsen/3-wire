@@ -1,3 +1,7 @@
+
+#ifndef SERICCAT_HPP_
+#define SERICCAT_HPP_
+
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -10,7 +14,7 @@
 // the type will type will be used to determine how to interpret the data, but this will not be forced:
 // data will be stored as a byte array of some type dynamic enough to know its own size
 
-namespace stringycat {
+namespace sericat {
 
 enum class SdoDataType {
   BOOL,
@@ -145,4 +149,6 @@ public:
     data_ = value;
   }
 };
-}  // namespace stringycat
+}  // namespace sericat
+
+#endif  // SERICCAT_HPP_
