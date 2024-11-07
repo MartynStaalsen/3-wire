@@ -146,6 +146,10 @@ TEST(SdoTest, SdoStringList){
   EXPECT_EQ(Sylvester.get(), std::vector<std::string>({"Hello", "World", "!"}));
   EXPECT_EQ(Sylvie.get(), std::vector<std::string>({"Goodbye"}));
   EXPECT_EQ(Syl.get(), StringList({}));
+
+  // empty one should make an empty list
+  Sdo<std::vector<std::string>> unset("empty");
+  EXPECT_EQ(unset.get(), std::vector<std::string>());
 }
 
 TEST(SdoTest, SdoBaseVector)
@@ -229,6 +233,38 @@ TEST(SdoTest, SdoBaseVector)
   EXPECT_EQ(sdo_vector[2]->serialize(), to_byte_string(456.789f));
   EXPECT_EQ(sdo_vector[3]->serialize(), to_byte_string(std::string("Goodbye, World!")));  // BUG: funky with cstrs still
   EXPECT_EQ(sdo_vector[3]->serialize(), "Goodbye, World!");  // should be itself
+}
+
+TEST(SdoTest, PrototypeSerDeser){
+  Sdo<bool> Bob("Bob", true);
+  Sdo<std::int32_t> Irma("Irma", 123);
+  Sdo<float> Frank("Frank", 123.456f);
+  Sdo<std::string> Sue("Sue", "Hello, World!");
+  Sdo<StringList> Sylvester("Sylvester", {"Hello", "World", "!"});
+
+  std::vector<std::shared_ptr<SdoBase>> sdo_vector;
+  // SdoBase newBob = deserialize_prototype(serialize_prototype(Bob));
+  // push back from prototype
+
+  sdo_vector.push_back(std::make_shared<SdoBase>(deserialize_prototype(serialize_prototype(Bob))));
+  sdo_vector.push_back(std::make_shared<SdoBase>(deserialize_prototype(serialize_prototype(Irma))));
+  sdo_vector.push_back(std::make_shared<SdoBase>(deserialize_prototype(serialize_prototype(Frank))));
+  sdo_vector.push_back(std::make_shared<SdoBase>(deserialize_prototype(serialize_prototype(Sue))));
+  sdo_vector.push_back(std::make_shared<SdoBase>(deserialize_prototype(serialize_prototype(Sylvester))));
+
+  // import data
+  sdo_vector[0]->deserialize(Bob.serialize());  // don't need to know type explicitly to do this
+  sdo_vector[1]->deserialize(Irma.serialize());
+  sdo_vector[2]->deserialize(Frank.serialize());
+  sdo_vector[3]->deserialize(Sue.serialize());
+  sdo_vector[4]->deserialize(Sylvester.serialize());
+
+  // check by casting to appropriate type
+  EXPECT_EQ(static_cast<Sdo<bool>*>(sdo_vector[0].get())->get(), Bob.get());
+  EXPECT_EQ(static_cast<Sdo<std::int32_t>*>(sdo_vector[1].get())->get(), Irma.get());
+  EXPECT_EQ(static_cast<Sdo<float>*>(sdo_vector[2].get())->get(), Frank.get());
+  EXPECT_EQ(static_cast<Sdo<std::string>*>(sdo_vector[3].get())->get(), Sue.get());
+  EXPECT_EQ(static_cast<Sdo<StringList>*>(sdo_vector[4].get())->get(), Sylvester.get());
 }
 
 TEST(SdoTest, SdoBaseStringList){

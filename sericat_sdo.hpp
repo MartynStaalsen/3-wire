@@ -107,8 +107,6 @@ StringList from_byte_string<StringList>(std::string const& s){
   return result;
 }
 
-
-
 // make a base class for the sdo obj, that
 class SdoBase {
 protected:
@@ -126,10 +124,6 @@ public:
   // get data as a string
   std::string serialize(){
     return data_;
-  }
-
-  std::string serialize_prototype(){
-    return to_byte_string(type_) + to_byte_string(description_);
   }
 
   // turn put raw string into data_. make sure it's valid for type_ first tho
@@ -184,6 +178,17 @@ public:
     data_ = to_byte_string<T>(value);
   }
 };
+
+std::string serialize_prototype(SdoBase const& sdo){
+  return to_byte_string(sdo.type_) + to_byte_string(sdo.description_);
+}
+
+SdoBase deserialize_prototype(std::string const& sdo_str){
+  SdoDataType type = from_byte_string<SdoDataType>(sdo_str.substr(0, sizeof(SdoDataType)));  // SdoDataType is a char
+  std::string description = sdo_str.substr(sizeof(SdoDataType));
+  return SdoBase(description, type);
+}
+
 
 
 }  // namespace sericat

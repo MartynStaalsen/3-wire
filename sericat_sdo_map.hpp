@@ -7,7 +7,7 @@ namespace sericat
 {
 /*
   Define an object that holds sdos. this will be a string map so objects can be accessed by an "index" string
-  could just do a list and access by numeric index, but since addresses will be passed as strings over the 
+  could just do a list and access by numeric index, but since addresses will be passed as strings over the
   serial line, it makes sense to use strings as the index
 
   The contents of the map should be statically constructed, though the objects inside can have their data changed ofc
@@ -20,7 +20,7 @@ class SdoMap : public std::map<std::string, SdoBase * >
 public:
 
   SdoMap(std::map<std::string, SdoBase *> sdo_map) : std::map<std::string, SdoBase *>(sdo_map) {}
-  
+
   // methods to get and set from raw string data
   // these will be used to read and write to the serial line
   void deserialize(std::string const& key, std::string const& raw_data)
@@ -32,7 +32,6 @@ public:
   {
     return this->at(key)->serialize();
   }
-
 
 };
 
