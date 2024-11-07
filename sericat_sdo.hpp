@@ -15,6 +15,47 @@
 
 namespace sericat {
 
+
+using StringList = std::vector<std::string>;
+
+enum SdoDataType : char {
+  BOOL,
+  INT_32,
+  FLOAT,
+  STRING,
+  STRING_LIST
+};
+
+template <typename T>
+SdoDataType t_to_type();
+
+template <>
+SdoDataType t_to_type<bool>(){
+  return SdoDataType::BOOL;
+}
+
+template <>
+SdoDataType t_to_type<std::int32_t>(){
+  return SdoDataType::INT_32;
+}
+
+template <>
+SdoDataType t_to_type<float>(){
+  return SdoDataType::FLOAT;
+}
+
+template <>
+SdoDataType t_to_type<std::string>(){
+  return SdoDataType::STRING;
+}
+
+template <>
+SdoDataType t_to_type<StringList>(){
+  return SdoDataType::STRING_LIST;
+}
+
+const char kDelim = '\0';
+
 template <typename T>
 std::string to_byte_string(T const& value){
   return std::string(reinterpret_cast<const char*>(&value), sizeof(T));
@@ -38,13 +79,35 @@ std::string from_byte_string<std::string>(std::string const& s){
   return s;
 }
 
-enum class SdoDataType {
-  BOOL,
-  INT_32,
-  FLOAT,
-  STRING,
-  STRING_LIST
-};
+
+// specialize for string list
+// TODO: should probably throw if string has the delim char in it...
+template <>
+std::string to_byte_string<StringList>(StringList const& value){
+  std::string result;
+  for (std::size_t i = 0; i < value.size(); ++i) {
+    result += value[i] + kDelim;
+  }
+  return result;
+}
+
+template <>
+StringList from_byte_string<StringList>(std::string const& s){
+  StringList result;
+  std::string::size_type start = 0;
+  std::string::size_type end = std::string::npos;
+  while (true) {
+    end = s.find(kDelim, start);
+    if (end == std::string::npos) {
+      break;
+    }
+    result.push_back(s.substr(start, end - start));
+    start = end + 1;
+  }
+  return result;
+}
+
+
 
 // make a base class for the sdo obj, that
 class SdoBase {
@@ -63,6 +126,10 @@ public:
   // get data as a string
   std::string serialize(){
     return data_;
+  }
+
+  std::string serialize_prototype(){
+    return to_byte_string(type_) + to_byte_string(description_);
   }
 
   // turn put raw string into data_. make sure it's valid for type_ first tho
@@ -97,115 +164,27 @@ public:
     }
     data_ = sdo_str;
   }
+
 };
 
 // specialize template types for each datatype
 template <typename T>
-class Sdo;
-
-template <>
-class Sdo<bool> : public SdoBase {
+class Sdo : public SdoBase {
 public:
-  Sdo(std::string const& description) : SdoBase(description, SdoDataType::BOOL) {}
-  Sdo(std::string const& description, bool const& initial_value) : SdoBase(description, SdoDataType::BOOL) {
+  Sdo(std::string const& description) : SdoBase(description, t_to_type<T>()) {}
+  Sdo(std::string const& description, T const& initial_value) : SdoBase(description, SdoDataType::STRING) {
     set(initial_value);
   }
 
-  bool get() const {
-    return from_byte_string<bool>(data_);
+  T get() const {
+    return from_byte_string<T>(data_);
   }
 
-  void set(bool const& value) {
-    data_ = to_byte_string<bool>(value);
-  }
-};
-
-template <>
-class Sdo<std::int32_t> : public SdoBase {
-public:
-  Sdo(std::string const& description) : SdoBase(description, SdoDataType::INT_32) {}
-  Sdo(std::string const& description, std::int32_t const& initial_value) : SdoBase(description, SdoDataType::INT_32) {
-    set(initial_value);
-  }
-
-  std::int32_t get() const {
-    return from_byte_string<std::int32_t>(data_);
-  }
-
-  void set(std::int32_t const& value) {
-    data_ = to_byte_string<std::int32_t>(value);
+  void set(T const& value) {
+    data_ = to_byte_string<T>(value);
   }
 };
 
-template <>
-class Sdo<float> : public SdoBase {
-public:
-  Sdo(std::string const& description) : SdoBase(description, SdoDataType::FLOAT) {}
-  Sdo(std::string const& description, float const& initial_value) : SdoBase(description, SdoDataType::FLOAT) {
-    set(initial_value);
-  }
-
-  float get() const {
-    return from_byte_string<float>(data_);
-  }
-
-  void set(float const& value) {
-    data_ = to_byte_string<float>(value);
-  }
-};
-
-template <>
-class Sdo<std::string> : public SdoBase {
-public:
-  Sdo(std::string const& description) : SdoBase(description, SdoDataType::STRING) {}
-  Sdo(std::string const& description, std::string const& initial_value) : SdoBase(description, SdoDataType::STRING) {
-    set(initial_value);
-  }
-
-  std::string get() const {
-    return data_;
-  }
-
-  void set(std::string const& value) {
-    data_ = value;
-  }
-};
-
-using StringList = std::vector<std::string>;
-
-template <>
-class Sdo<StringList> : public SdoBase {
-public:
-  Sdo(std::string const& description) : SdoBase(description, SdoDataType::STRING_LIST) {}
-  Sdo(std::string const& description, StringList const& initial_value)
-   : SdoBase(description, SdoDataType::STRING_LIST) {
-    set(initial_value);
-  }
-
-  static const char delim = '\\';
-
-  StringList get() const {
-    std::vector<std::string> result;
-    std::string::size_type start = 0;
-    std::string::size_type end = std::string::npos;
-    while (true) {
-      end = data_.find(delim, start);
-      if (end == std::string::npos) {
-        break;
-      }
-      result.push_back(data_.substr(start, end - start));
-      start = end + 1;
-    }
-    return result;
-  }
-
-  void set(StringList const& value) {
-    data_.clear();
-    for (std::size_t i = 0; i < value.size(); ++i) {
-        data_ += value[i] + delim;
-    }
-  }
-};
 
 }  // namespace sericat
 

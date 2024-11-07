@@ -36,6 +36,40 @@ TEST(SdoTest, SerializeDeserialize){
   );
 }
 
+TEST(SdoTest, SerDeserDataType){
+  SdoDataType bool_type = SdoDataType::BOOL;
+  SdoDataType int_type = SdoDataType::INT_32;
+  SdoDataType float_type = SdoDataType::FLOAT;
+  SdoDataType string_type = SdoDataType::STRING;
+  SdoDataType string_list_type = SdoDataType::STRING_LIST;
+
+  ASSERT_EQ(
+    bool_type,
+    from_byte_string<SdoDataType>(to_byte_string(bool_type))
+  );
+
+  ASSERT_EQ(
+    int_type,
+    from_byte_string<SdoDataType>(to_byte_string(int_type))
+  );
+
+  ASSERT_EQ(
+    float_type,
+    from_byte_string<SdoDataType>(to_byte_string(float_type))
+  );
+
+  ASSERT_EQ(
+    string_type,
+    from_byte_string<SdoDataType>(to_byte_string(string_type))
+  );
+
+  ASSERT_EQ(
+    string_list_type,
+    from_byte_string<SdoDataType>(to_byte_string(string_list_type))
+  );
+
+}
+
 TEST(SdoTest, SdoBool){
   Sdo<bool> Bob("Bob", true);
   Sdo<bool> Brian("Brian", false);
