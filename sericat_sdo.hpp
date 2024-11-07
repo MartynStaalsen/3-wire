@@ -6,7 +6,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
- 
+
 // define an "sdo" obj
 // this will live at an address, but that address is not part of the object
 // this will have some data, a description/name tag, and a type
@@ -42,14 +42,15 @@ enum class SdoDataType {
   BOOL,
   INT_32,
   FLOAT,
-  STRING
+  STRING,
+  STRING_LIST
 };
 
-// make a base class for the sdo obj, that 
+// make a base class for the sdo obj, that
 class SdoBase {
 protected:
   std::string data_;
-  
+
 public:
   const std::string description_;
   const SdoDataType type_;
@@ -65,7 +66,7 @@ public:
   }
 
   // turn put raw string into data_. make sure it's valid for type_ first tho
-  // throws invalid_argument if the string is not the right size for the type 
+  // throws invalid_argument if the string is not the right size for the type
   void deserialize(std::string const sdo_str){
     switch (type_)
     {
@@ -169,6 +170,43 @@ public:
     data_ = value;
   }
 };
+
+using StringList = std::vector<std::string>;
+
+template <>
+class Sdo<StringList> : public SdoBase {
+public:
+  Sdo(std::string const& description) : SdoBase(description, SdoDataType::STRING_LIST) {}
+  Sdo(std::string const& description, StringList const& initial_value)
+   : SdoBase(description, SdoDataType::STRING_LIST) {
+    set(initial_value);
+  }
+
+  static const char delim = '\\';
+
+  StringList get() const {
+    std::vector<std::string> result;
+    std::string::size_type start = 0;
+    std::string::size_type end = std::string::npos;
+    while (true) {
+      end = data_.find(delim, start);
+      if (end == std::string::npos) {
+        break;
+      }
+      result.push_back(data_.substr(start, end - start));
+      start = end + 1;
+    }
+    return result;
+  }
+
+  void set(StringList const& value) {
+    data_.clear();
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        data_ += value[i] + delim;
+    }
+  }
+};
+
 }  // namespace sericat
 
 #endif  // SERICCAT_SDO_HPP_
