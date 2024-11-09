@@ -67,6 +67,42 @@ TEST(SdoMapTest, StaticSdoMapTest){
   EXPECT_EQ(sdo_map.serialize_sdo("Frank"), to_byte_string(456.789f));
   EXPECT_EQ(sdo_map.serialize_sdo("Sue"), to_byte_string(std::string("Goodbye, World!")));  // BUG: funky with cstrs still
 }
+
+TEST(SdoMapTest, MapSerDeser){
+  SdoMap sdo_map({
+    {"Bob", new Sdo<bool>("Bob", true)},
+    {"Irma", new Sdo<std::int32_t>("Irma", -44)},
+    {"Frank", new Sdo<float>("Frank", 3.14)},
+    {"Sue", new Sdo<std::string>("Sue", "hi there")}
+  });
+
+  // serialize
+  StringMap expected = {
+    {"Bob", to_byte_string(true)},
+    {"Irma", to_byte_string(-44)},
+    {"Frank", to_byte_string(3.14f)},
+    {"Sue", to_byte_string(std::string("hi there"))}
+  };
+
+  EXPECT_EQ(sdo_map.serialize(), to_byte_string(expected));
+
+  // deserialize
+  StringMap new_expected = {
+    {"Bob", to_byte_string(false)},
+    {"Irma", to_byte_string(44)},
+    {"Frank", to_byte_string(6.28f)},
+    {"Sue", to_byte_string(std::string("bye there"))}
+  };
+
+  sdo_map.deserialize(to_byte_string(new_expected));
+
+  // check by casting to original type cast
+  EXPECT_EQ(static_cast<Sdo<bool>*>(sdo_map.at("Bob"))->get(), false);
+  EXPECT_EQ(static_cast<Sdo<std::int32_t>*>(sdo_map.at("Irma"))->get(), 44);
+  EXPECT_EQ(static_cast<Sdo<float>*>(sdo_map.at("Frank"))->get(), 6.28f);
+  EXPECT_EQ(static_cast<Sdo<std::string>*>(sdo_map.at("Sue"))->get(), "bye there");
+}
+
 }   // namespace sericat
 
 #endif // SERICAT_MAP_TESTS_HPP_

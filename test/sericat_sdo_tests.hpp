@@ -9,7 +9,15 @@
 namespace sericat
 {
 
-TEST(SdoTest, SerializeDeserialize){
+TEST(SdoTest, T2Type){
+  EXPECT_EQ(t_to_type<bool>(), SdoDataType::BOOL);
+  EXPECT_EQ(t_to_type<std::int32_t>(), SdoDataType::INT_32);
+  EXPECT_EQ(t_to_type<float>(), SdoDataType::FLOAT);
+  EXPECT_EQ(t_to_type<std::string>(), SdoDataType::STRING);
+  EXPECT_EQ(t_to_type<StringList>(), SdoDataType::STRING_LIST);
+}
+
+TEST(SerDeserTest, SerializeDeserialize){
   // test byte string conversion and back for each type
   bool val = true;
   ASSERT_EQ(
@@ -36,7 +44,62 @@ TEST(SdoTest, SerializeDeserialize){
   );
 }
 
-TEST(SdoTest, SerDeserDataType){
+
+TEST(SerDeserTest, SerDeserStringMap)
+{
+  StringMap string_map_val = {
+    {"a", "b"},
+    {"c", "d"}
+  };
+
+  StringMap deser_stringmap = from_byte_string<StringMap>(to_byte_string(string_map_val));
+  ASSERT_EQ(
+    deser_stringmap["a"],
+    string_map_val["a"]
+  );
+  ASSERT_EQ(
+    deser_stringmap["c"],
+    string_map_val["c"]
+  );
+
+  ASSERT_EQ(
+    string_map_val,
+    from_byte_string<StringMap>(to_byte_string(string_map_val))
+  );
+
+  StringMap empty_string_map_val = {};
+  ASSERT_EQ(
+    empty_string_map_val,
+    from_byte_string<StringMap>(to_byte_string(empty_string_map_val))
+  );
+}
+
+TEST(SerDeserTest, SerDeserStringList)
+{
+  StringList string_list_val = {"Hello", "World", "!"};
+  ASSERT_EQ(
+    string_list_val,
+    from_byte_string<StringList>(to_byte_string(string_list_val))
+  );
+  ASSERT_EQ(
+    to_byte_string(string_list_val),
+    "\x03\x05Hello\x05World\x01!"
+  );
+
+  StringList empty_string_list_val = {};
+  ASSERT_EQ(
+    empty_string_list_val,
+    from_byte_string<StringList>(to_byte_string(empty_string_list_val))
+  );
+
+  std::string zero_string = std::string(1, static_cast<char>(0));
+  ASSERT_EQ(
+    to_byte_string(empty_string_list_val),
+    zero_string
+  );
+}
+
+TEST(SerDeserTest, SerDeserSdoDataType){
   SdoDataType bool_type = SdoDataType::BOOL;
   SdoDataType int_type = SdoDataType::INT_32;
   SdoDataType float_type = SdoDataType::FLOAT;
@@ -67,7 +130,6 @@ TEST(SdoTest, SerDeserDataType){
     string_list_type,
     from_byte_string<SdoDataType>(to_byte_string(string_list_type))
   );
-
 }
 
 TEST(SdoTest, SdoBool){
@@ -281,6 +343,39 @@ TEST(SdoTest, SdoBaseStringList){
   EXPECT_EQ(Sylvie->get(), Sylvester->get());
 }
 
+TEST(SdoTest, GenericGetSet){
+  Sdo<bool> Bob("Bob", true);
+  Sdo<std::int32_t> Irma("Irma", 123);
+  Sdo<float> Frank("Frank", 123.456f);
+  Sdo<std::string> Sue("Sue", "Hello, World!");
+
+  EXPECT_EQ(get<bool>(Bob), true);
+  EXPECT_EQ(get<std::int32_t>(Irma), 123);
+  EXPECT_EQ(get<float>(Frank), 123.456f);
+  EXPECT_EQ(get<std::string>(Sue), "Hello, World!");
+
+  set<bool>(Bob, false);
+  set(Irma, 456);
+  set(Frank, 456.789f);
+  set<std::string>(Sue, "Goodbye, World!");
+
+  EXPECT_EQ(get<bool>(Bob), false);
+  EXPECT_EQ(get<std::int32_t>(Irma), 456);
+  EXPECT_EQ(get<float>(Frank), 456.789f);
+  EXPECT_EQ(get<std::string>(Sue), "Goodbye, World!");
+
+  EXPECT_THROW(get<std::int32_t>(Bob), std::invalid_argument);
+  EXPECT_THROW(set(Bob, 123), std::invalid_argument);
+
+  EXPECT_THROW(get<bool>(Irma), std::invalid_argument);
+  EXPECT_THROW(set(Irma, true), std::invalid_argument);
+
+  EXPECT_THROW(get<float>(Sue), std::invalid_argument);
+  EXPECT_THROW(set(Sue, 123.456f), std::invalid_argument);
+
+  EXPECT_THROW(get<std::string>(Frank), std::invalid_argument);
+  EXPECT_THROW(set<std::string>(Frank, "Hello, World!"), std::invalid_argument);
+}
 
 }  // namespace sericat
 

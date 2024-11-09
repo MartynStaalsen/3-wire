@@ -30,7 +30,7 @@ public:
     SdoMap const& config,
     SdoMap const& rxpdo,
     SdoMap const& txpdo
-  ) : config_(config), rxpdo_(rxpdo), txpdo_(txpdo), active_rxpdos_({}), active_txpdos_({}) {
+  ) : config_(config), rxpdo_(rxpdo), txpdo_(txpdo), active_rxpdos_(), active_txpdos_() {
     // add empty string_list to config for rx and tx pdo assignments
     rxpdo_assignment_ = std::make_shared<Sdo<StringList>>(kRxPDOAssignmentKey);
     txpdo_assignment_ = std::make_shared<Sdo<StringList>>(kTxPDOAssignmentKey);
@@ -50,7 +50,7 @@ public:
   // the pdo address is a string that is used to access the pdo in the rxpdo or txpdo map
   // this method should throw if the pdo address is not found in the rxpdo or txpdo map
   // for now, we'll only accept a whole assingment StringList (not individual pv and pdo address)
-  void set_rxpdo_assignment(std::map<std::string, std::string> const& pv_to_pdo)
+  void set_rxpdo_assignment(StringMap const& pv_to_pdo)
   {
     // make sure all pdo addresses are in the rxpdo map
     for (auto const& [pv, pdo] : pv_to_pdo) {
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  void set_txpdo_assignment(std::map<std::string, std::string> const& pv_to_pdo)
+  void set_txpdo_assignment(StringMap const& pv_to_pdo)
   {
         // make sure all pdo addresses are in the rxpdo map
     for (auto const& [pv, pdo] : pv_to_pdo) {
@@ -82,11 +82,15 @@ public:
     }
   }
 
-  // methods to use assignments to serialize/deserialize assigned pdos
-  // std::string serialize_rxpdo()
-  // {
-  //   return active_rxpdos_.serialize();
-  // }
+  void deserialize_rxpdos(std::string const& serialized_rxpdo_map)
+  {
+    active_rxpdos_.deserialize(serialized_rxpdo_map); // TODO: need to convert from process names to my names
+  }
+
+  std::string serialize_txpdos()
+  {
+    return active_txpdos_.serialize();
+  }
 
 
 
