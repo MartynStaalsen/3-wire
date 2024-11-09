@@ -1,5 +1,5 @@
-#ifndef SERICCAT_SDO_HPP_
-#define SERICCAT_SDO_HPP_
+#ifndef SERICAT_SDO_HPP_
+#define SERICAT_SDO_HPP_
 
 #include <cstdint>
 #include <stdexcept>
@@ -193,4 +193,4 @@ SdoBase deserialize_prototype(std::string const& sdo_str){
 
 }  // namespace sericat
 
-#endif  // SERICCAT_SDO_HPP_
+#endif  // SERICAT_SDO_HPP_

@@ -21,14 +21,17 @@ public:
 
   SdoMap(std::map<std::string, SdoBase *> sdo_map) : std::map<std::string, SdoBase *>(sdo_map) {}
 
+  // copy constructor
+  SdoMap(SdoMap const& other) : std::map<std::string, SdoBase *>(other) {}
+
   // methods to get and set from raw string data
   // these will be used to read and write to the serial line
-  void deserialize(std::string const& key, std::string const& raw_data)
+  void deserialize_sdo(std::string const& key, std::string const& raw_data)
   {
     this->at(key)->deserialize(raw_data);
   }
 
-  std::string serializ_sdo(std::string const& key)
+  std::string serialize_sdo(std::string const& key)
   {
     return this->at(key)->serialize();
   }
