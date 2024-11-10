@@ -116,38 +116,39 @@ TEST(SericatSlaveTest, SerDeser){
 
 
   // remote instance of the pdos
+  auto remote_bool_rx = std::make_shared<Sdo<bool>>("Bob");
+  auto remote_int_rx = std::make_shared<Sdo<std::int32_t>>("Irma");
+  auto remote_float_rx = std::make_shared<Sdo<float>>("Frank");
+  auto remote_string_rx = std::make_shared<Sdo<std::string>>("Sue");
+
   SdoMap remote_rxpdos({
-    {"pv1", std::make_shared<Sdo<bool>>("Bob").get()},
-    {"pv2", std::make_shared<Sdo<std::int32_t>>("Irma").get()},
-    {"pv3", std::make_shared<Sdo<float>>("Frank").get()},
-    {"pv4", std::make_shared<Sdo<std::string>>("Sue").get()}
+    {"pv_1", remote_bool_rx.get()},
+    {"pv_2", remote_int_rx.get()},
+    {"pv_3", remote_float_rx.get()},
+    {"pv_4", remote_string_rx.get()}
   });
+
+  auto remote_tx_bool = std::make_shared<Sdo<bool>>("Todd");
+  auto remote_tx_int = std::make_shared<Sdo<std::int32_t>>("Tracie");
 
   SdoMap remote_txpdos({
-    {"hi", std::make_shared<Sdo<bool>>("Todd").get()},
-    {"some_val", std::make_shared<Sdo<std::int32_t>>("Tracie").get()}
+    {"hi", remote_tx_bool.get()},
+    {"some_val", remote_tx_int.get()}
   });
 
-  set(*remote_rxpdos["pv1"], false);
-  set(*remote_rxpdos["pv2"], 456);
-  set(*remote_rxpdos["pv3"], 456.789f);
-  set(*remote_rxpdos["pv4"], std::string("Goodbye, World!"));
+  set(*remote_rxpdos["pv_1"], false);
+  set(*remote_rxpdos["pv_2"], 456);
+  set(*remote_rxpdos["pv_3"], 456.789f);
+  set(*remote_rxpdos["pv_4"], std::string("Goodbye, World!"));
 
   set(*local_txpdos["tx_1"], true);
   set(*local_txpdos["tx_2"], 123);
 
-  std::cout << "serializing rxpdos:" << std::endl;
-  for (auto const& [key, sdo] : remote_rxpdos) {
-    std::cout << " " << key << " " << std::endl;
-  }
-  std::cout << std::endl;
-
   std::string serialized_rxpdos = remote_rxpdos.serialize();
-  std::cout << "deserializing rxpdos" << std::endl;
   slave.deserialize_rxpdos(serialized_rxpdos);
 
-  std::cout << "deserializing txpdos" << std::endl;
-  remote_txpdos.deserialize(slave.serialize_txpdos());
+  std::string serialized_txpdos = slave.serialize_txpdos();
+  remote_txpdos.deserialize(serialized_txpdos);
 
   EXPECT_EQ(some_received_bool.get(), false);
   EXPECT_EQ(some_received_int.get(), 456);

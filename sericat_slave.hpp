@@ -84,7 +84,7 @@ public:
 
   void deserialize_rxpdos(std::string const& serialized_rxpdo_map)
   {
-    active_rxpdos_.deserialize(serialized_rxpdo_map); // TODO: need to convert from process names to my names
+    active_rxpdos_.deserialize(serialized_rxpdo_map);
   }
 
   std::string serialize_txpdos()

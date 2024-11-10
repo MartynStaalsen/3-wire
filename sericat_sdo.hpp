@@ -149,7 +149,7 @@ StringMap from_byte_string<StringMap>(std::string const& s){
 // make a base class for the sdo obj, that
 class SdoBase {
 protected:
-  std::string data_;
+  std::string data_ = "";
 
 public:
   const std::string description_;
@@ -167,7 +167,7 @@ public:
 
   // turn put raw string into data_. make sure it's valid for type_ first tho
   // throws invalid_argument if the string is not the right size for the type
-  void deserialize(std::string const sdo_str){
+  void deserialize(std::string const& sdo_str){
     switch (type_)
     {
       case SdoDataType::BOOL:

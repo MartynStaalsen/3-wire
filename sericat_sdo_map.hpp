@@ -25,6 +25,10 @@ public:
   // these will be used to read and write to the serial line
   void deserialize_sdo(std::string const& key, std::string const& raw_data)
   {
+    if (this->find(key) == this->end())
+    {
+      throw std::runtime_error("Key " + key + " not found in SdoMap");
+    }
     this->at(key)->deserialize(raw_data);
   }
 
@@ -46,8 +50,8 @@ public:
 
   void deserialize(std::string const& sdo_map_str){
     // deserialize the whole map
-    StringMap sdo_map = from_byte_string<StringMap>(sdo_map_str);
-    for (auto const& [key, raw_data] : sdo_map) {
+    StringMap string_map = from_byte_string<StringMap>(sdo_map_str);
+    for (auto const& [key, raw_data] : string_map) {
       deserialize_sdo(key, raw_data);
     }
   }
