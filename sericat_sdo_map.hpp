@@ -1,7 +1,7 @@
 #ifndef SERICAT_SDO_MAP_HPP_
 #define SERICAT_SDO_MAP_HPP_
 
-#include <sericat_sdo.hpp>
+#include "sericat_sdo.hpp"
 
 namespace sericat
 {
@@ -18,6 +18,14 @@ namespace sericat
 class SdoMap : public std::map<std::string, SdoBase * >
 {
 public:
+  // exception for when an sdo is not found in the map during a get or set operation
+  class SdoNotFoundException : public std::runtime_error
+  {
+  public:
+    explicit SdoNotFoundException(const std::string& key)
+      : std::runtime_error("Sdo with key " + key + " not found in SdoMap") {}
+  };
+
   SdoMap() : std::map<std::string, SdoBase * >({}) {}
   SdoMap(std::map<std::string, SdoBase *> sdo_map) : std::map<std::string, SdoBase *>(sdo_map) {}
 
@@ -27,13 +35,17 @@ public:
   {
     if (this->find(key) == this->end())
     {
-      throw std::runtime_error("Key " + key + " not found in SdoMap");
+      throw SdoNotFoundException(key);
     }
     this->at(key)->deserialize(raw_data);
   }
 
   std::string serialize_sdo(std::string const& key)
   {
+    if (this->find(key) == this->end())
+    {
+      throw SdoNotFoundException(key);
+    }
     return this->at(key)->serialize();
   }
 

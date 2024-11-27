@@ -86,6 +86,23 @@ TEST(SerDeserTest, SerDeserStringList)
     "\x03\x05Hello\x05World\x01!"
   );
 
+  // test that it throws if the string is too short
+  EXPECT_THROW(
+    from_byte_string<StringList>("\x03\x05Hello\x05World\x01"),
+    std::invalid_argument
+  );
+
+  // throw with too few chars in an elem
+  EXPECT_THROW(
+    from_byte_string<StringList>("\x03\x05Hellodd\x05World\x01"),
+    std::invalid_argument
+  );
+
+  // test that it does not throw if the string is too long
+  EXPECT_NO_THROW(
+    from_byte_string<StringList>("\x03\x05Hello\x05World\x01 blablabla")
+  );
+
   StringList empty_string_list_val = {};
   ASSERT_EQ(
     empty_string_list_val,
